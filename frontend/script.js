@@ -41,16 +41,12 @@ function updateHistorySidebar() {
     const sidebar = document.getElementById("historySidebar");
     if (!sidebar) return;
     const history = loadHistory();
-    const groups = groupByDate(history);
-    const dates = Object.keys(groups).reverse();
-    if (dates.length === 0) { sidebar.innerHTML = '<p class="no-history">Koi history nahi hai abhi 📭</p>'; return; }
-    sidebar.innerHTML = dates.map(date => `
-        <div class="history-group">
-            <div class="history-date">${date}</div>
-            ${groups[date].slice(-3).reverse().map(msg => `
-                <div class="history-item" onclick="loadHistoryMessage('${encodeURIComponent(msg.text.substring(0,100))}')">
-                    ${msg.text.substring(0, 45)}${msg.text.length > 45 ? "..." : ""}
-                </div>`).join("")}
+    const userMsgs = history.filter(m => m.role === "user").reverse();
+    if (userMsgs.length === 0) { sidebar.innerHTML = '<p class="no-history-msg">No chats yet</p>'; return; }
+    sidebar.innerHTML = userMsgs.slice(0, 20).map(msg => `
+        <div class="history-chat-item" onclick="loadHistoryMessage('${encodeURIComponent(msg.text.substring(0,100))}')">
+            <span>${msg.text.substring(0, 38)}${msg.text.length > 38 ? "..." : ""}</span>
+            <svg class="pin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
         </div>`).join("");
 }
 function loadHistoryMessage(encodedText) {
