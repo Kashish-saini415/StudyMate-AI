@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+strands-agents
+litellm
+pydantic
+PyPDF2
+python-docx
+python-multipart

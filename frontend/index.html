@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>StudyMate AI 🎓</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 StudyMate AI</h2>
+                <p>Your personal study partner</p>
+            </div>
+            <div class="feature-list">
+                <p class="feature-title">What I can do:</p>
+                <div class="feature-item" onclick="setPrompt('Explain this topic in simple words: ')">📚 Explain Topics</div>
+                <div class="feature-item" onclick="setPrompt('Summarize these notes into bullet points: ')">📝 Summarize Notes</div>
+                <div class="feature-item" onclick="setPrompt('Generate 10 MCQ questions on: ')">❓ Generate MCQs</div>
+                <div class="feature-item" onclick="setPrompt('Give me a career roadmap for: ')">🚀 Career Roadmap</div>
+                <div class="feature-item" onclick="setPrompt('Review my resume and give feedback: ')">📄 Resume Review</div>
+                <div class="feature-item" onclick="setPrompt('Explain this code and fix bugs: ')">💻 Code Helper</div>
+                <div class="feature-item" onclick="setPrompt('Ask me interview questions for: ')">🎯 Interview Prep</div>
+            </div>
+            <button class="clear-btn" onclick="clearChat()">🗑️ Clear Chat</button>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="status-dot"></div>
+                <span>StudyMate is ready to help! ✨</span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="avatar">🎓</div>
+                    <div class="bubble">
+                        Namaste! 👋 Main hoon <strong>StudyMate</strong> — tera personal AI study partner!<br><br>
+                        Ab main ye bhi kar sakta hoon:<br>
+                        📎 <strong>Documents</strong> upload karo (PDF, DOCX, TXT)<br>
+                        🖼️ <strong>Images</strong> upload karo ya camera se photo lo<br>
+                        💬 <strong>Kuch bhi pucho</strong> — main Hinglish mein samjhaunga!<br><br>
+                        Bata, aaj kya padhna hai? 😊
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Preview Area -->
+            <div class="file-preview-area" id="filePreviewArea" style="display:none;">
+                <div class="file-preview-content" id="filePreviewContent"></div>
+                <button class="remove-file-btn" onclick="removeFile()">✕ Remove</button>
+            </div>
+
+            <!-- Camera Modal -->
+            <div class="camera-modal" id="cameraModal" style="display:none;">
+                <div class="camera-container">
+                    <div class="camera-header">
+                        <span>📷 Camera</span>
+                        <button onclick="closeCamera()">✕</button>
+                    </div>
+                    <video id="cameraVideo" autoplay playsinline></video>
+                    <canvas id="cameraCanvas" style="display:none;"></canvas>
+                    <div class="camera-controls">
+                        <button class="capture-btn" onclick="capturePhoto()">📸 Photo Lo</button>
+                        <button class="cancel-camera-btn" onclick="closeCamera()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <!-- Hidden file inputs -->
+                    <input type="file" id="documentInput" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleDocumentSelect(event)" />
+                    <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)" />
+
+                    <!-- Action buttons -->
+                    <div class="input-actions">
+                        <button class="action-btn" onclick="document.getElementById('documentInput').click()" title="Upload Document (PDF, DOCX, TXT)">📎</button>
+                        <button class="action-btn" onclick="document.getElementById('imageInput').click()" title="Upload Image">🖼️</button>
+                        <button class="action-btn" onclick="openCamera()" title="Take Photo">📷</button>
+                    </div>
+
+                    <textarea
+                        id="userInput"
+                        placeholder="Kuch bhi pucho ya file attach karo... 💬"
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                        <span>➤</span>
+                    </button>
+                </div>
+                <p class="input-hint">Enter to send • Shift+Enter for new line • 📎 Doc • 🖼️ Image • 📷 Camera</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Redirect to login if not logged in
+        const user = localStorage.getItem("studymate_user");
+        if (!user) window.location.href = "login.html";
+
+        // Show username in header
+        window.addEventListener("DOMContentLoaded", () => {
+            const u = localStorage.getItem("studymate_user");
+            if (u) {
+                const header = document.querySelector(".chat-header");
+                const userBadge = document.createElement("span");
+                userBadge.style.cssText = "margin-left:auto; font-size:0.8rem; color:#a78bfa; background:#1e1e35; padding:4px 10px; border-radius:20px; border:1px solid #2a2a45;";
+                userBadge.textContent = "👩‍🎓 " + u;
+                header.appendChild(userBadge);
+
+                // Logout button
+                const logoutBtn = document.createElement("button");
+                logoutBtn.textContent = "Logout";
+                logoutBtn.style.cssText = "background:transparent; border:none; color:#555; font-size:0.75rem; cursor:pointer; margin-left:8px;";
+                logoutBtn.onclick = () => { localStorage.removeItem("studymate_user"); window.location.href = "login.html"; };
+                header.appendChild(logoutBtn);
+            }
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
