@@ -329,28 +329,54 @@ function appendMessageWithFile(text, sender, fileInfo) {
     chatMessages.appendChild(msgDiv); scrollToBottom();
 }
 function formatText(text) {
+    // Split into lines and process
+    let lines = text.split('\n');
+    let html = '';
+    let inList = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+
+        // H2: ## Heading
+        if (/^##\s+(.+)/.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h2 style="font-size:1.05rem;font-weight:700;margin:18px 0 6px;color:#1f1f1f;">${applyInline(line.replace(/^##\s+/, ''))}</h2>`;
+        }
+        // H3: ### Heading
+        else if (/^###\s+(.+)/.test(line)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h3 style="font-size:0.97rem;font-weight:600;margin:14px 0 4px;color:#333;">${applyInline(line.replace(/^###\s+/, ''))}</h3>`;
+        }
+        // Bullet: - item or * item or + item
+        else if (/^[\-\*\+]\s+(.+)/.test(line)) {
+            if (!inList) { html += '<ul style="margin:6px 0 6px 20px;padding:0;">'; inList = true; }
+            html += `<li style="margin:4px 0;line-height:1.6;">${applyInline(line.replace(/^[\-\*\+]\s+/, ''))}</li>`;
+        }
+        // Numbered list: 1. item
+        else if (/^\d+\.\s+(.+)/.test(line)) {
+            if (!inList) { html += '<ol style="margin:6px 0 6px 20px;padding:0;">'; inList = true; }
+            html += `<li style="margin:4px 0;line-height:1.6;">${applyInline(line.replace(/^\d+\.\s+/, ''))}</li>`;
+        }
+        // Empty line
+        else if (line.trim() === '') {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += '<div style="height:8px;"></div>';
+        }
+        // Normal paragraph line
+        else {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p style="margin:4px 0;line-height:1.7;">${applyInline(line)}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html;
+}
+
+function applyInline(text) {
     return text
-        // H2 headings — ## Heading
-        .replace(/^## (.+)$/gm, '<h2 style="font-size:1.1rem;font-weight:700;margin:16px 0 6px;color:#1f1f1f;">$1</h2>')
-        // H3 headings — ### Heading
-        .replace(/^### (.+)$/gm, '<h3 style="font-size:1rem;font-weight:600;margin:12px 0 4px;color:#1f1f1f;">$1</h3>')
-        // Bold
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Italic
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Bullet points — lines starting with - or *
-        .replace(/^[\-\*] (.+)$/gm, '<li style="margin:3px 0 3px 18px;list-style:disc;">$1</li>')
-        // Numbered list
-        .replace(/^\d+\. (.+)$/gm, '<li style="margin:3px 0 3px 18px;list-style:decimal;">$1</li>')
-        // Wrap consecutive <li> in <ul>
-        .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul style="margin:6px 0;padding-left:4px;">$&</ul>')
-        // Code blocks
-        .replace(/`([^`]+)`/g, '<code style="background:#f1f3f4;padding:2px 6px;border-radius:4px;font-size:0.88rem;font-family:monospace;">$1</code>')
-        // Horizontal rule
-        .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #e0e0e0;margin:12px 0;">')
-        // Line breaks
-        .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
-        .replace(/\n/g, '<br>');
+        .replace(/`([^`]+)`/g, '<code style="background:#f1f3f4;padding:1px 5px;border-radius:4px;font-size:0.87rem;font-family:monospace;">$1</code>');
 }
 function showTyping() {
     document.getElementById("welcomeScreen").style.display = "none";
