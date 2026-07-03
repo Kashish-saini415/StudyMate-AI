@@ -3,141 +3,369 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>StudyMate AI 🎓</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>StudyMate AI</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Google Sans', 'Segoe UI', sans-serif; background:#f0f4f9; color:#1f1f1f; height:100vh; display:flex; overflow:hidden; }
+
+        /* ---- SIDEBAR ---- */
+        .sidebar {
+            width: 60px;
+            background: #f0f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px 0;
+            gap: 6px;
+            border-right: 1px solid #e0e0e0;
+            z-index: 10;
+        }
+        .sidebar-logo { width:32px; height:32px; margin-bottom:16px; cursor:pointer; }
+        .sidebar-logo svg { width:32px; height:32px; }
+        .sidebar-btn {
+            width:42px; height:42px; border-radius:50%; border:none;
+            background:transparent; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.1rem; color:#444; transition:background 0.2s;
+        }
+        .sidebar-btn:hover { background:#e8eaf0; }
+        .sidebar-btn.active { background:#e8f0fe; color:#1a73e8; }
+        .sidebar-spacer { flex:1; }
+        .user-avatar {
+            width:34px; height:34px; border-radius:50%;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            display:flex; align-items:center; justify-content:center;
+            color:white; font-weight:700; font-size:0.85rem; cursor:pointer;
+            margin-top:8px;
+        }
+
+        /* ---- MAIN AREA ---- */
+        .main {
+            flex:1; display:flex; flex-direction:column;
+            overflow:hidden; position:relative;
+        }
+
+        /* Top bar */
+        .topbar {
+            display:flex; align-items:center; justify-content:flex-end;
+            padding:10px 20px; gap:10px;
+        }
+        .model-badge {
+            display:flex; align-items:center; gap:6px;
+            padding:6px 14px; border-radius:20px;
+            background:#e8f0fe; color:#1a73e8;
+            font-size:0.82rem; font-weight:500; cursor:pointer;
+            border:none;
+        }
+        .new-chat-btn {
+            padding:6px 14px; border-radius:20px;
+            background:transparent; border:1px solid #dadce0;
+            color:#444; font-size:0.82rem; cursor:pointer;
+            display:flex; align-items:center; gap:5px;
+            transition:background 0.2s;
+        }
+        .new-chat-btn:hover { background:#e8eaf0; }
+
+        /* ---- WELCOME / CHAT AREA ---- */
+        .chat-area {
+            flex:1; overflow-y:auto; padding:0 20px;
+            display:flex; flex-direction:column;
+            scrollbar-width:thin; scrollbar-color:#dadce0 transparent;
+        }
+        .chat-area::-webkit-scrollbar { width:6px; }
+        .chat-area::-webkit-scrollbar-thumb { background:#dadce0; border-radius:3px; }
+
+        /* Welcome screen */
+        .welcome-screen {
+            flex:1; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            gap:32px; padding:40px 20px;
+            min-height: 60vh;
+        }
+        .welcome-greeting {
+            font-size:2rem; font-weight:400; color:#1f1f1f;
+            text-align:center;
+        }
+        .welcome-greeting span { 
+            background: linear-gradient(135deg, #4285f4, #ea4335, #fbbc05, #34a853);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            background-clip:text;
+        }
+
+        /* Quick action chips */
+        .quick-chips {
+            display:flex; flex-wrap:wrap; gap:10px; justify-content:center; max-width:700px;
+        }
+        .chip {
+            padding:10px 18px; border-radius:24px;
+            border:1px solid #dadce0; background:white;
+            font-size:0.85rem; color:#444; cursor:pointer;
+            transition:all 0.2s; display:flex; align-items:center; gap:7px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.08);
+        }
+        .chip:hover { background:#e8f0fe; border-color:#c5d9f5; color:#1a73e8; }
+
+        /* Messages */
+        .messages-list { display:flex; flex-direction:column; gap:0; padding:20px 0; max-width:760px; margin:0 auto; width:100%; }
+
+        .msg-row { display:flex; gap:12px; padding:16px 0; animation:fadeIn 0.3s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+        .msg-row.user { flex-direction:row-reverse; }
+
+        .msg-avatar {
+            width:34px; height:34px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1rem; font-weight:700;
+        }
+        .msg-avatar.bot-av { background:linear-gradient(135deg,#4285f4,#8B5CF6); color:white; font-size:0.85rem; }
+        .msg-avatar.user-av {
+            background:linear-gradient(135deg,#8B5CF6,#EC4899);
+            color:white; font-size:0.82rem;
+        }
+
+        .msg-content { max-width:680px; }
+        .msg-name { font-size:0.78rem; color:#888; margin-bottom:5px; font-weight:500; }
+        .msg-row.user .msg-name { text-align:right; }
+
+        .msg-bubble {
+            padding:12px 18px; border-radius:18px;
+            font-size:0.92rem; line-height:1.65;
+        }
+        .msg-row.bot .msg-bubble {
+            background:white; border:1px solid #e8eaed;
+            border-top-left-radius:4px;
+            box-shadow:0 1px 4px rgba(0,0,0,0.06);
+            color:#1f1f1f;
+        }
+        .msg-row.user .msg-bubble {
+            background:#e8f0fe; color:#1f1f1f;
+            border-top-right-radius:4px;
+        }
+
+        /* Typing */
+        .typing-dots { display:flex; gap:5px; padding:14px 18px; background:white; border:1px solid #e8eaed; border-radius:18px; border-top-left-radius:4px; width:fit-content; }
+        .typing-dots span { width:8px; height:8px; background:#bbb; border-radius:50%; animation:typingBounce 1.2s infinite; }
+        .typing-dots span:nth-child(2){animation-delay:0.2s;}
+        .typing-dots span:nth-child(3){animation-delay:0.4s;}
+        @keyframes typingBounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-8px);} }
+
+        /* ---- INPUT AREA ---- */
+        .input-section {
+            padding:12px 20px 20px;
+            max-width:800px; margin:0 auto; width:100%;
+        }
+
+        /* File preview */
+        .file-preview-area {
+            display:none; align-items:center; gap:10px;
+            background:white; border:1px solid #dadce0;
+            border-radius:12px; padding:8px 14px;
+            margin-bottom:8px; font-size:0.83rem; color:#444;
+        }
+        .file-preview-area img { width:44px; height:44px; object-fit:cover; border-radius:6px; }
+        .remove-file-btn { margin-left:auto; background:none; border:none; cursor:pointer; color:#888; font-size:0.8rem; }
+        .remove-file-btn:hover { color:#e53935; }
+
+        /* Input bar */
+        .input-bar {
+            display:flex; align-items:flex-end; gap:8px;
+            background:white; border:1px solid #dadce0;
+            border-radius:28px; padding:8px 12px 8px 16px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            transition:box-shadow 0.2s, border-color 0.2s;
+        }
+        .input-bar:focus-within { border-color:#4285f4; box-shadow:0 2px 12px rgba(66,133,244,0.15); }
+
+        .input-left { display:flex; gap:2px; align-items:flex-end; }
+        .ibar-btn {
+            width:36px; height:36px; border-radius:50%; border:none;
+            background:transparent; cursor:pointer; font-size:1rem;
+            display:flex; align-items:center; justify-content:center;
+            color:#666; transition:background 0.2s;
+        }
+        .ibar-btn:hover { background:#f1f3f4; }
+        .ibar-btn.recording { background:rgba(234,67,53,0.1); animation:recordPulse 1s infinite; }
+        @keyframes recordPulse { 0%,100%{box-shadow:0 0 0 0 rgba(234,67,53,0.3);} 50%{box-shadow:0 0 0 6px rgba(234,67,53,0);} }
+        .ibar-btn.speak-on { background:#e8f0fe; color:#1a73e8; }
+
+        textarea#userInput {
+            flex:1; border:none; outline:none; resize:none;
+            font-size:0.95rem; line-height:1.5; background:transparent;
+            color:#1f1f1f; max-height:140px; padding:6px 0;
+            font-family:inherit;
+        }
+        textarea#userInput::placeholder { color:#aaa; }
+
+        .send-btn {
+            width:38px; height:38px; border-radius:50%; border:none;
+            background:#4285f4; color:white; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1rem; flex-shrink:0; transition:all 0.2s;
+        }
+        .send-btn:hover { background:#1a73e8; }
+        .send-btn:disabled { background:#dadce0; cursor:not-allowed; }
+
+        .input-hint { font-size:0.72rem; color:#bbb; text-align:center; margin-top:6px; }
+
+        /* Voice status */
+        .voice-status { display:none; align-items:center; gap:8px; padding:5px 14px; background:#fff3cd; border-radius:8px; font-size:0.78rem; color:#856404; margin-bottom:6px; }
+        .voice-status.show { display:flex; }
+        .voice-dot { width:7px; height:7px; background:#e53935; border-radius:50%; animation:recordPulse 1s infinite; }
+
+        /* Camera modal */
+        .camera-modal { position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:none; align-items:center; justify-content:center; }
+        .camera-container { background:white; border-radius:16px; padding:20px; width:460px; max-width:95vw; }
+        .camera-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:500; color:#1f1f1f; }
+        .camera-header button { background:none; border:none; cursor:pointer; font-size:1.1rem; color:#888; }
+        #cameraVideo { width:100%; border-radius:10px; }
+        .camera-controls { display:flex; gap:10px; margin-top:12px; }
+        .capture-btn { flex:1; padding:11px; background:#4285f4; border:none; border-radius:10px; color:white; font-size:0.9rem; cursor:pointer; }
+        .cancel-camera-btn { padding:11px 18px; background:none; border:1px solid #dadce0; border-radius:10px; color:#666; cursor:pointer; }
+
+        /* History panel */
+        .history-panel {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow-y: auto;
+            transition: width 0.3s;
+        }
+        .history-panel.hidden { width: 0; padding: 0; overflow: hidden; }
+        .history-panel h3 { font-size:0.88rem; color:#444; font-weight:600; margin-bottom:12px; }
+        .history-group { margin-bottom:14px; }
+        .history-date { font-size:0.7rem; color:#999; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+        .history-item { padding:8px 10px; border-radius:8px; font-size:0.8rem; color:#555; cursor:pointer; transition:background 0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-left:2px solid transparent; }
+        .history-item:hover { background:#f1f3f4; color:#1a73e8; border-left-color:#1a73e8; }
+        .no-history { font-size:0.78rem; color:#bbb; text-align:center; padding:10px 0; }
+
+        /* Hidden inputs */
+        input[type=file] { display:none; }
+    </style>
 </head>
 <body>
-    <div class="app-container">
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>🎓 StudyMate AI</h2>
-                <p>Your personal study partner</p>
-            </div>
-            <div class="feature-list">
-                <p class="feature-title">What I can do:</p>
-                <div class="feature-item" onclick="setPrompt('Explain this topic in simple words: ')">📚 Explain Topics</div>
-                <div class="feature-item" onclick="setPrompt('Summarize these notes into bullet points: ')">📝 Summarize Notes</div>
-                <div class="feature-item" onclick="setPrompt('Generate 10 MCQ questions on: ')">❓ Generate MCQs</div>
-                <div class="feature-item" onclick="setPrompt('Give me a career roadmap for: ')">🚀 Career Roadmap</div>
-                <div class="feature-item" onclick="setPrompt('Review my resume and give feedback: ')">📄 Resume Review</div>
-                <div class="feature-item" onclick="setPrompt('Explain this code and fix bugs: ')">💻 Code Helper</div>
-                <div class="feature-item" onclick="setPrompt('Ask me interview questions for: ')">🎯 Interview Prep</div>
-            </div>
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <svg viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="14" fill="url(#g1)"/>
+            <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="14" font-weight="700">S</text>
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#4285f4"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs>
+        </svg>
+    </div>
+    <button class="sidebar-btn active" title="New Chat" onclick="startNewChat()">✏️</button>
+    <button class="sidebar-btn" title="History" onclick="toggleHistory()">🕐</button>
+    <button class="sidebar-btn" title="Explore Features">🧩</button>
+    <button class="sidebar-btn" title="Settings">⚙️</button>
+    <div class="sidebar-spacer"></div>
+    <div class="user-avatar" id="userAvatar" title="Profile">K</div>
+</div>
 
-            <!-- Chat History Section -->
-            <div class="history-section">
-                <p class="feature-title" style="margin-bottom:8px;">🕐 Chat History</p>
-                <div id="historySidebar" class="history-sidebar">
-                    <p class="no-history">Koi history nahi hai abhi 📭</p>
-                </div>
-            </div>
-
-            <button class="clear-btn" onclick="clearChat()">🗑️ Clear Chat</button>        </div>
-
-        <!-- Main Chat Area -->
-        <div class="chat-container">
-            <div class="chat-header">
-                <div class="status-dot"></div>
-                <span>StudyMate is ready to help! ✨</span>
-            </div>
-
-            <div class="chat-messages" id="chatMessages">
-                <div class="message bot-message">
-                    <div class="avatar">🎓</div>
-                    <div class="bubble">
-                        Namaste! 👋 Main hoon <strong>StudyMate</strong> — tera personal AI study partner!<br><br>
-                        Ab main ye bhi kar sakta hoon:<br>
-                        📎 <strong>Documents</strong> upload karo (PDF, DOCX, TXT)<br>
-                        🖼️ <strong>Images</strong> upload karo ya camera se photo lo<br>
-                        💬 <strong>Kuch bhi pucho</strong> — main Hinglish mein samjhaunga!<br><br>
-                        Bata, aaj kya padhna hai? 😊
-                    </div>
-                </div>
-            </div>
-
-            <!-- File Preview Area -->
-            <div class="file-preview-area" id="filePreviewArea" style="display:none;">
-                <div class="file-preview-content" id="filePreviewContent"></div>
-                <button class="remove-file-btn" onclick="removeFile()">✕ Remove</button>
-            </div>
-
-            <!-- Camera Modal -->
-            <div class="camera-modal" id="cameraModal" style="display:none;">
-                <div class="camera-container">
-                    <div class="camera-header">
-                        <span>📷 Camera</span>
-                        <button onclick="closeCamera()">✕</button>
-                    </div>
-                    <video id="cameraVideo" autoplay playsinline></video>
-                    <canvas id="cameraCanvas" style="display:none;"></canvas>
-                    <div class="camera-controls">
-                        <button class="capture-btn" onclick="capturePhoto()">📸 Photo Lo</button>
-                        <button class="cancel-camera-btn" onclick="closeCamera()">Cancel</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chat-input-area">
-                <div class="voice-status" id="voiceStatus">
-                    <div class="voice-dot"></div>
-                    <span id="voiceStatusText">Sun rahi hoon... 🎤</span>
-                </div>
-                <div class="input-wrapper">
-                    <!-- Hidden file inputs -->
-                    <input type="file" id="documentInput" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleDocumentSelect(event)" />
-                    <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)" />
-
-                    <!-- Action buttons -->
-                    <div class="input-actions">
-                        <button class="action-btn" onclick="document.getElementById('documentInput').click()" title="Upload Document (PDF, DOCX, TXT)">📎</button>
-                        <button class="action-btn" onclick="document.getElementById('imageInput').click()" title="Upload Image">🖼️</button>
-                        <button class="action-btn" onclick="openCamera()" title="Take Photo">📷</button>
-                        <button class="action-btn voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
-                        <button class="action-btn" id="speakToggleBtn" onclick="toggleAutoSpeak()" title="AI Voice On/Off">🔊</button>
-                    </div>
-
-                    <textarea
-                        id="userInput"
-                        placeholder="Kuch bhi pucho ya file attach karo... 💬"
-                        rows="1"
-                        onkeydown="handleKeyDown(event)"
-                        oninput="autoResize(this)"
-                    ></textarea>
-                    <button class="send-btn" onclick="sendMessage()" id="sendBtn">
-                        <span>➤</span>
-                    </button>
-                </div>
-                <p class="input-hint">Enter to send • Shift+Enter for new line • 📎 Doc • 🖼️ Image • 📷 Camera • 🎤 Voice</p>
-            </div>
-        </div>
+<!-- Main -->
+<div class="main">
+    <div class="topbar">
+        <button class="new-chat-btn" onclick="startNewChat()">✏️ New Chat</button>
+        <button class="model-badge">✦ StudyMate Flash ▾</button>
     </div>
 
-    <script>
-        // Redirect to login if not logged in
-        const user = localStorage.getItem("studymate_user");
-        if (!user) window.location.href = "login.html";
+    <!-- Chat area -->
+    <div class="chat-area" id="chatArea">
+        <!-- Welcome screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-greeting" id="welcomeGreeting">
+                Hi there, <span>what's on your mind?</span>
+            </div>
+            <div class="quick-chips">
+                <div class="chip" onclick="setPrompt('Explain this topic in simple words: ')">📚 Explain a Topic</div>
+                <div class="chip" onclick="setPrompt('Summarize these notes into bullet points: ')">📝 Summarize Notes</div>
+                <div class="chip" onclick="setPrompt('Generate 10 MCQ questions on: ')">❓ Generate MCQs</div>
+                <div class="chip" onclick="setPrompt('Give me a career roadmap for: ')">🚀 Career Roadmap</div>
+                <div class="chip" onclick="setPrompt('Review my resume and give feedback: ')">📄 Resume Review</div>
+                <div class="chip" onclick="setPrompt('Explain this code and fix bugs: ')">💻 Code Helper</div>
+                <div class="chip" onclick="setPrompt('Ask me interview questions for: ')">🎯 Interview Prep</div>
+                <div class="chip" onclick="setPrompt('मुझे इस topic के बारे में हिंदी में समझाओ: ')">🇮🇳 Explain in Hindi</div>
+            </div>
+        </div>
+        <!-- Messages -->
+        <div class="messages-list" id="messagesList" style="display:none;"></div>
+    </div>
 
-        // Show username in header
-        window.addEventListener("DOMContentLoaded", () => {
-            const u = localStorage.getItem("studymate_user");
-            if (u) {
-                const header = document.querySelector(".chat-header");
-                const userBadge = document.createElement("span");
-                userBadge.style.cssText = "margin-left:auto; font-size:0.8rem; color:#a78bfa; background:#1e1e35; padding:4px 10px; border-radius:20px; border:1px solid #2a2a45;";
-                userBadge.textContent = "👩‍🎓 " + u;
-                header.appendChild(userBadge);
+    <!-- Input Section -->
+    <div class="input-section">
+        <div class="voice-status" id="voiceStatus">
+            <div class="voice-dot"></div>
+            <span id="voiceStatusText">Listening... speak now 🎤</span>
+        </div>
+        <div class="file-preview-area" id="filePreviewArea">
+            <div id="filePreviewContent"></div>
+            <button class="remove-file-btn" onclick="removeFile()">✕ Remove</button>
+        </div>
+        <div class="input-bar">
+            <input type="file" id="documentInput" accept=".pdf,.docx,.txt" onchange="handleDocumentSelect(event)" />
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(event)" />
+            <div class="input-left">
+                <button class="ibar-btn" onclick="document.getElementById('documentInput').click()" title="Upload Document">📎</button>
+                <button class="ibar-btn" onclick="document.getElementById('imageInput').click()" title="Upload Image">🖼️</button>
+                <button class="ibar-btn" onclick="openCamera()" title="Take Photo">📷</button>
+            </div>
+            <textarea id="userInput" placeholder="Ask StudyMate anything..." rows="1"
+                onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+            <button class="ibar-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+            <button class="ibar-btn" id="speakToggleBtn" onclick="toggleAutoSpeak()" title="AI Voice Response">🔊</button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+        <p class="input-hint">StudyMate may make mistakes. Press Enter to send · Shift+Enter for new line</p>
+    </div>
+</div>
 
-                // Logout button
-                const logoutBtn = document.createElement("button");
-                logoutBtn.textContent = "Logout";
-                logoutBtn.style.cssText = "background:transparent; border:none; color:#555; font-size:0.75rem; cursor:pointer; margin-left:8px;";
-                logoutBtn.onclick = () => { localStorage.removeItem("studymate_user"); window.location.href = "login.html"; };
-                header.appendChild(logoutBtn);
-            }
-        });
-    </script>
-    <script src="script.js"></script>
+<!-- History Panel -->
+<div class="history-panel hidden" id="historyPanel">
+    <h3>🕐 Recent Chats</h3>
+    <div id="historySidebar"><p class="no-history">No history yet 📭</p></div>
+</div>
+
+<!-- Camera Modal -->
+<div class="camera-modal" id="cameraModal">
+    <div class="camera-container">
+        <div class="camera-header"><span>📷 Camera</span><button onclick="closeCamera()">✕</button></div>
+        <video id="cameraVideo" autoplay playsinline></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <div class="camera-controls">
+            <button class="capture-btn" onclick="capturePhoto()">📸 Capture Photo</button>
+            <button class="cancel-camera-btn" onclick="closeCamera()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Login check
+const user = localStorage.getItem("studymate_user");
+if (!user) window.location.href = "login.html";
+
+// Set greeting & avatar
+window.addEventListener("DOMContentLoaded", () => {
+    const u = localStorage.getItem("studymate_user") || "there";
+    document.getElementById("welcomeGreeting").innerHTML = `Hi ${u}, <span>what's on your mind?</span>`;
+    document.getElementById("userAvatar").textContent = u.charAt(0).toUpperCase();
+    updateHistorySidebar();
+    restoreChatFromHistory();
+});
+
+function toggleHistory() {
+    const panel = document.getElementById("historyPanel");
+    panel.classList.toggle("hidden");
+}
+
+function startNewChat() {
+    document.getElementById("welcomeScreen").style.display = "flex";
+    document.getElementById("messagesList").style.display = "none";
+    document.getElementById("messagesList").innerHTML = "";
+}
+</script>
+<script src="script.js"></script>
 </body>
 </html>
