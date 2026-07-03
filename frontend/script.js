@@ -11,11 +11,15 @@ let isRecording = false;
 // ============================================================
 function getUser() { return localStorage.getItem("studymate_user") || "Guest"; }
 function getHistoryKey() { return `studymate_history_${getUser()}`; }
+function isGuest() { return getUser() === "Guest"; }
+
 function loadHistory() {
+    if (isGuest()) return []; // Guest ki history store nahi hoti
     try { return JSON.parse(localStorage.getItem(getHistoryKey())) || []; }
     catch { return []; }
 }
 function saveMessage(role, text, fileInfo = null) {
+    if (isGuest()) return; // Guest ke messages save nahi hote
     const history = loadHistory();
     history.push({ role, text, fileInfo: fileInfo ? { name: fileInfo.name, type: fileInfo.type } : null, timestamp: new Date().toISOString() });
     if (history.length > 200) history.splice(0, history.length - 200);
@@ -23,6 +27,7 @@ function saveMessage(role, text, fileInfo = null) {
     updateHistorySidebar();
 }
 function clearHistoryStorage() {
+    if (isGuest()) return;
     localStorage.removeItem(getHistoryKey());
     updateHistorySidebar();
 }
@@ -40,6 +45,19 @@ function groupByDate(history) {
 function updateHistorySidebar() {
     const sidebar = document.getElementById("historySidebar");
     if (!sidebar) return;
+
+    // Guest user — show login prompt instead of history
+    if (isGuest()) {
+        sidebar.innerHTML = `
+            <div style="padding:12px 8px;text-align:center;">
+                <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Sign in to save your chat history</p>
+                <button onclick="showLoginPrompt()" style="width:100%;padding:9px;background:#1a73e8;border:none;border-radius:20px;color:white;font-size:0.82rem;cursor:pointer;font-weight:500;">
+                    Sign in with Email
+                </button>
+            </div>`;
+        return;
+    }
+
     const history = loadHistory();
     const userMsgs = history.filter(m => m.role === "user").reverse();
     if (userMsgs.length === 0) { sidebar.innerHTML = '<p class="no-history-msg">No chats yet</p>'; return; }

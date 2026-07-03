@@ -474,6 +474,23 @@
     <div id="historySidebar"><p class="no-history">No history yet 📭</p></div>
 </div>
 
+<!-- Login Prompt Modal -->
+<div id="loginPromptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:20px;padding:32px 28px;width:360px;max-width:95vw;box-shadow:0 20px 50px rgba(0,0,0,0.2);animation:cardAppear 0.3s ease;">
+        <div style="text-align:center;margin-bottom:20px;">
+            <div style="font-size:2.5rem;margin-bottom:8px;">🔐</div>
+            <h2 style="font-size:1.2rem;font-weight:600;color:#1f1f1f;">Sign in to save history</h2>
+            <p style="font-size:0.83rem;color:#888;margin-top:6px;">Guest accounts don't save chat history. Sign in with email to keep your chats.</p>
+        </div>
+        <button onclick="window.location.href='login.html'" style="width:100%;padding:12px;background:#1a73e8;border:none;border-radius:24px;color:white;font-size:0.9rem;font-weight:600;cursor:pointer;margin-bottom:10px;">
+            Sign in with Email
+        </button>
+        <button onclick="document.getElementById('loginPromptModal').style.display='none'" style="width:100%;padding:11px;background:transparent;border:1px solid #dadce0;border-radius:24px;color:#444;font-size:0.87rem;cursor:pointer;">
+            Continue as Guest
+        </button>
+    </div>
+</div>
+
 <!-- Camera Modal -->
 <div class="camera-modal" id="cameraModal">
     <div class="camera-container">
@@ -527,6 +544,11 @@ function toggleSettingsMenu() {
 function logout() {
     localStorage.removeItem("studymate_user");
     window.location.href = "login.html";
+}
+
+function showLoginPrompt() {
+    const modal = document.getElementById("loginPromptModal");
+    modal.style.display = "flex";
 }
 
 // Close settings menu when clicking outside
