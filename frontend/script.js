@@ -378,3 +378,168 @@ window.addEventListener("DOMContentLoaded", () => {
     updateHistorySidebar();
     restoreChatFromHistory();
 });
+
+// ============================================================
+// VOICE INPUT — Speech to Text (Web Speech API)
+// ============================================================
+
+let recognition = null;
+let isRecording = false;
+
+function initVoiceRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        console.warn("Speech Recognition not supported");
+        return null;
+    }
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.lang = "hi-IN"; // Hindi + English (Hinglish)
+
+    rec.onstart = () => {
+        isRecording = true;
+        document.getElementById("voiceBtn").classList.add("recording");
+        document.getElementById("voiceStatus").classList.add("show");
+        document.getElementById("voiceStatusText").textContent = "Sun rahi hoon... bolo! 🎤";
+    };
+
+    rec.onresult = (event) => {
+        let interim = "";
+        let final = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) final += transcript;
+            else interim += transcript;
+        }
+        // Show interim in input box
+        const input = document.getElementById("userInput");
+        input.value = final || interim;
+        autoResize(input);
+        document.getElementById("voiceStatusText").textContent = interim ? `"${interim}"` : "Sun rahi hoon... 🎤";
+    };
+
+    rec.onend = () => {
+        isRecording = false;
+        document.getElementById("voiceBtn").classList.remove("recording");
+        document.getElementById("voiceStatus").classList.remove("show");
+
+        // Auto send if something was captured
+        const input = document.getElementById("userInput");
+        if (input.value.trim()) {
+            setTimeout(() => sendMessage(), 300);
+        }
+    };
+
+    rec.onerror = (e) => {
+        isRecording = false;
+        document.getElementById("voiceBtn").classList.remove("recording");
+        document.getElementById("voiceStatus").classList.remove("show");
+        if (e.error === "no-speech") {
+            appendMessageText("Koi awaaz nahi aayi! Dobara try karo 🎤", "bot");
+        } else if (e.error === "not-allowed") {
+            appendMessageText("Microphone access nahi mila 😔 Browser settings mein allow karo!", "bot");
+        }
+    };
+
+    return rec;
+}
+
+function toggleVoiceInput() {
+    if (!recognition) recognition = initVoiceRecognition();
+    if (!recognition) {
+        alert("Tera browser voice input support nahi karta 😔 Chrome use karo!");
+        return;
+    }
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        document.getElementById("userInput").value = "";
+        recognition.start();
+    }
+}
+
+// ============================================================
+// VOICE OUTPUT — Text to Speech (Web Speech Synthesis)
+// ============================================================
+
+let autoSpeakEnabled = false;
+let currentUtterance = null;
+
+function toggleAutoSpeak() {
+    autoSpeakEnabled = !autoSpeakEnabled;
+    const btn = document.getElementById("speakToggleBtn");
+    if (autoSpeakEnabled) {
+        btn.classList.add("speak-active");
+        btn.title = "AI Voice ON — click to turn off";
+        appendMessageText("Voice mode ON hai! 🔊 Ab main bolke bhi jawab dungi!", "bot");
+    } else {
+        btn.classList.remove("speak-active");
+        btn.title = "AI Voice Off";
+        stopSpeaking();
+    }
+}
+
+function speakText(text) {
+    if (!autoSpeakEnabled) return;
+    stopSpeaking();
+
+    // Clean text — remove emojis and markdown for cleaner speech
+    const cleanText = text
+        .replace(/[🎓📚✨💕🤔💙🚀📝❓📄💻🎯🎉🥳😊😄🤫💪🔊🎤]/gu, "")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/\*(.*?)\*/g, "$1")
+        .replace(/<[^>]+>/g, "")
+        .trim();
+
+    if (!cleanText) return;
+
+    currentUtterance = new SpeechSynthesisUtterance(cleanText);
+    currentUtterance.lang = "hi-IN";
+    currentUtterance.rate = 0.95;
+    currentUtterance.pitch = 1.1;
+    currentUtterance.volume = 1;
+
+    // Try to use a female voice
+    const voices = window.speechSynthesis.getVoices();
+    const hindiVoice = voices.find(v => v.lang.includes("hi") && v.name.toLowerCase().includes("female"))
+        || voices.find(v => v.lang.includes("hi"))
+        || voices.find(v => v.name.toLowerCase().includes("female"));
+    if (hindiVoice) currentUtterance.voice = hindiVoice;
+
+    window.speechSynthesis.speak(currentUtterance);
+}
+
+function stopSpeaking() {
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+// Override appendMessageText to also speak bot messages
+const _origAppendMessageText = appendMessageText;
+// Wrap to add speaking
+function appendMessageText(text, sender) {
+    const chatMessages = document.getElementById("chatMessages");
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("message", sender === "user" ? "user-message" : "bot-message");
+    const avatar = document.createElement("div");
+    avatar.classList.add("avatar");
+    avatar.textContent = sender === "user" ? "👩‍🎓" : "🎓";
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+    bubble.innerHTML = formatText(text);
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(bubble);
+    chatMessages.appendChild(msgDiv);
+    scrollToBottom();
+
+    // Speak bot response
+    if (sender === "bot" && autoSpeakEnabled) {
+        bubble.classList.add("speaking");
+        speakText(text);
+        if (currentUtterance) {
+            currentUtterance.onend = () => bubble.classList.remove("speaking");
+        }
+    }
+}

@@ -478,3 +478,44 @@ textarea::placeholder { color: #555; }
     color: #a78bfa;
     border-left-color: #a78bfa;
 }
+
+/* ---- VOICE FEATURES ---- */
+.voice-btn.recording {
+    background: rgba(239, 68, 68, 0.2) !important;
+    animation: voicePulse 1s ease-in-out infinite;
+}
+@keyframes voicePulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+.speak-active {
+    background: rgba(167,139,250,0.2) !important;
+    color: #a78bfa !important;
+}
+
+/* Voice status bar */
+.voice-status {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(239,68,68,0.1);
+    border-top: 1px solid rgba(239,68,68,0.2);
+    font-size: 0.78rem;
+    color: #f87171;
+    animation: fadeIn 0.3s ease;
+}
+.voice-status.show { display: flex; }
+.voice-dot {
+    width: 8px; height: 8px;
+    background: #f87171;
+    border-radius: 50%;
+    animation: voicePulse 1s infinite;
+}
+
+/* Speaking indicator on bot message */
+.bubble.speaking {
+    border-color: #a78bfa !important;
+    box-shadow: 0 0 12px rgba(167,139,250,0.3);
+}

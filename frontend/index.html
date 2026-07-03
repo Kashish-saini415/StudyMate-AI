@@ -80,6 +80,10 @@
             </div>
 
             <div class="chat-input-area">
+                <div class="voice-status" id="voiceStatus">
+                    <div class="voice-dot"></div>
+                    <span id="voiceStatusText">Sun rahi hoon... 🎤</span>
+                </div>
                 <div class="input-wrapper">
                     <!-- Hidden file inputs -->
                     <input type="file" id="documentInput" accept=".pdf,.docx,.txt" style="display:none;" onchange="handleDocumentSelect(event)" />
@@ -90,6 +94,8 @@
                         <button class="action-btn" onclick="document.getElementById('documentInput').click()" title="Upload Document (PDF, DOCX, TXT)">📎</button>
                         <button class="action-btn" onclick="document.getElementById('imageInput').click()" title="Upload Image">🖼️</button>
                         <button class="action-btn" onclick="openCamera()" title="Take Photo">📷</button>
+                        <button class="action-btn voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice Input">🎤</button>
+                        <button class="action-btn" id="speakToggleBtn" onclick="toggleAutoSpeak()" title="AI Voice On/Off">🔊</button>
                     </div>
 
                     <textarea
@@ -103,7 +109,7 @@
                         <span>➤</span>
                     </button>
                 </div>
-                <p class="input-hint">Enter to send • Shift+Enter for new line • 📎 Doc • 🖼️ Image • 📷 Camera</p>
+                <p class="input-hint">Enter to send • Shift+Enter for new line • 📎 Doc • 🖼️ Image • 📷 Camera • 🎤 Voice</p>
             </div>
         </div>
     </div>
