@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>StudyMate AI — Login</title>
+    <!-- Live2D Cubism SDK -->
+    <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
         body {
@@ -23,38 +25,84 @@
         @keyframes floatUp {
             0%{transform:translateY(100vh) scale(0);opacity:0;}
             10%{opacity:0.5;} 90%{opacity:0.2;}
-            100%{transform:translateY(-10vh) scale(1.5);opacity:0;}
+            100%{transform:translateY(-10vh);opacity:0;}
         }
         .main-layout {
             position:relative; z-index:10;
-            display:flex; align-items:center; gap:40px; padding:20px;
+            display:flex; align-items:center; gap:30px; padding:20px;
         }
         .girl-wrapper {
-            display:flex; flex-direction:column; align-items:center; gap:14px;
+            display:flex; flex-direction:column; align-items:center; gap:10px;
         }
         .speech-bubble {
             background:rgba(30,80,180,0.25);
             border:1px solid rgba(100,180,255,0.5);
             border-radius:16px 16px 16px 4px;
             padding:10px 16px; font-size:0.85rem;
-            color:#64b4ff; max-width:220px; text-align:center;
+            color:#64b4ff; max-width:230px; text-align:center;
             animation:bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-            min-height: 42px;
+            min-height: 42px; z-index: 20; position:relative;
         }
         @keyframes bubblePop { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+        #live2d-canvas {
+            width: 280px;
+            height: 420px;
+            border-radius: 16px;
+        }
+        /* LOGIN CARD */
+        .login-card {
+            background:rgba(10,10,30,0.92); backdrop-filter:blur(20px);
+            border:1px solid rgba(100,180,255,0.2); border-radius:24px;
+            padding:38px 34px; width:370px; max-width:95vw;
+            box-shadow:0 25px 60px rgba(0,0,0,0.6);
+            animation:cardAppear 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes cardAppear { from{opacity:0;transform:translateY(40px) scale(0.9);} to{opacity:1;transform:translateY(0) scale(1);} }
+        .logo-area{text-align:center;margin-bottom:22px;}
+        .logo-icon{font-size:2.5rem;display:block;animation:bounce 2s ease-in-out infinite;}
+        @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+        .logo-title{font-size:1.5rem;font-weight:700;color:#64b4ff;margin-top:8px;}
+        .logo-subtitle{font-size:0.78rem;color:#555;margin-top:4px;}
+        .tabs{display:flex;background:#050510;border-radius:10px;padding:4px;margin-bottom:22px;}
+        .tab{flex:1;padding:9px;text-align:center;font-size:0.84rem;color:#555;cursor:pointer;border-radius:8px;transition:all 0.3s;}
+        .tab.active{background:linear-gradient(135deg,#1e50b4,#64b4ff);color:white;font-weight:600;}
+        .form{display:none;} .form.active{display:block;animation:fadeInForm 0.3s ease;}
+        @keyframes fadeInForm{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+        .input-group{margin-bottom:15px;}
+        .input-group label{display:block;font-size:0.76rem;color:#666;margin-bottom:6px;letter-spacing:0.5px;}
+        .input-group input{width:100%;padding:11px 14px;background:#050510;border:1px solid #1a1a3a;border-radius:10px;color:#e0e0e0;font-size:0.87rem;outline:none;transition:all 0.3s;}
+        .input-group input:focus{border-color:#1e50b4;box-shadow:0 0 0 3px rgba(30,80,180,0.2);}
+        .input-group input::placeholder{color:#333;}
+        .submit-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1e50b4,#64b4ff);border:none;border-radius:12px;color:white;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:6px;}
+        .submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(30,80,180,0.5);}
+        .divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#333;font-size:0.76rem;}
+        .divider::before,.divider::after{content:'';flex:1;height:1px;background:#1a1a3a;}
+        .guest-btn{width:100%;padding:11px;background:transparent;border:1px solid #1a1a3a;border-radius:12px;color:#666;font-size:0.87rem;cursor:pointer;transition:all 0.3s;}
+        .guest-btn:hover{background:#0a0a20;border-color:#64b4ff;color:#64b4ff;}
+        .success-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#050510;z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+        .success-overlay.show{display:flex;animation:fadeInFull 0.3s ease;}
+        @keyframes fadeInFull{from{opacity:0;}to{opacity:1;}}
+        .success-icon{font-size:4rem;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+        @keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
+        .success-text{color:#64b4ff;font-size:1.3rem;font-weight:600;}
+        .success-sub{color:#555;font-size:0.82rem;}
+        @media(max-width:750px){.main-layout{flex-direction:column;gap:16px;} #live2d-canvas{width:200px;height:300px;}}
     </style>
 </head>
 <body>
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 <div class="particles" id="particles"></div>
+
 <div class="main-layout">
+    <!-- Character side -->
     <div class="girl-wrapper">
         <div class="speech-bubble" id="speechBubble">Arre! Pehle login karo 😊</div>
-        <div id="animeGirl"></div>
+        <canvas id="live2d-canvas"></canvas>
     </div>
-    <!-- LOGIN CARD -->
-    <div class="login-card" id="loginCard">
+
+    <!-- Login Card -->
+    <div class="login-card">
         <div class="logo-area">
             <span class="logo-icon">🎓</span>
             <div class="logo-title">StudyMate AI</div>
@@ -96,51 +144,14 @@
         </div>
     </div>
 </div>
+
 <div class="success-overlay" id="successOverlay">
     <div class="success-icon">🎓</div>
     <div class="success-text" id="successText">Welcome!</div>
     <div class="success-sub">Padhai shuru karte hain... 📚</div>
 </div>
-<style>
-/* Card styles */
-.login-card {
-    background:rgba(10,10,30,0.92); backdrop-filter:blur(20px);
-    border:1px solid rgba(100,180,255,0.2); border-radius:24px;
-    padding:38px 34px; width:370px; max-width:95vw;
-    box-shadow:0 25px 60px rgba(0,0,0,0.6);
-    animation:cardAppear 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;
-}
-@keyframes cardAppear { from{opacity:0;transform:translateY(40px) scale(0.9);} to{opacity:1;transform:translateY(0) scale(1);} }
-.logo-area{text-align:center;margin-bottom:22px;}
-.logo-icon{font-size:2.5rem;display:block;animation:bounce 2s ease-in-out infinite;}
-@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-.logo-title{font-size:1.5rem;font-weight:700;color:#64b4ff;margin-top:8px;}
-.logo-subtitle{font-size:0.78rem;color:#555;margin-top:4px;}
-.tabs{display:flex;background:#050510;border-radius:10px;padding:4px;margin-bottom:22px;}
-.tab{flex:1;padding:9px;text-align:center;font-size:0.84rem;color:#555;cursor:pointer;border-radius:8px;transition:all 0.3s;}
-.tab.active{background:linear-gradient(135deg,#1e50b4,#64b4ff);color:white;font-weight:600;}
-.form{display:none;animation:fadeInForm 0.3s ease;} .form.active{display:block;}
-@keyframes fadeInForm{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
-.input-group{margin-bottom:15px;}
-.input-group label{display:block;font-size:0.76rem;color:#666;margin-bottom:6px;letter-spacing:0.5px;}
-.input-group input{width:100%;padding:11px 14px;background:#050510;border:1px solid #1a1a3a;border-radius:10px;color:#e0e0e0;font-size:0.87rem;outline:none;transition:all 0.3s;}
-.input-group input:focus{border-color:#1e50b4;box-shadow:0 0 0 3px rgba(30,80,180,0.2);}
-.input-group input::placeholder{color:#333;}
-.submit-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1e50b4,#64b4ff);border:none;border-radius:12px;color:white;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:6px;position:relative;overflow:hidden;}
-.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(30,80,180,0.5);}
-.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#333;font-size:0.76rem;}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#1a1a3a;}
-.guest-btn{width:100%;padding:11px;background:transparent;border:1px solid #1a1a3a;border-radius:12px;color:#666;font-size:0.87rem;cursor:pointer;transition:all 0.3s;}
-.guest-btn:hover{background:#0a0a20;border-color:#64b4ff;color:#64b4ff;}
-.success-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#050510;z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-.success-overlay.show{display:flex;animation:fadeInFull 0.3s ease;}
-@keyframes fadeInFull{from{opacity:0;}to{opacity:1;}}
-.success-icon{font-size:4rem;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
-@keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
-.success-text{color:#64b4ff;font-size:1.3rem;font-weight:600;}
-.success-sub{color:#555;font-size:0.82rem;}
-@media(max-width:700px){.main-layout{flex-direction:column;gap:16px;} #animeGirl svg{width:160px;height:320px;}}
-</style>
+
+<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
 <script>
 // Particles
 const container = document.getElementById("particles");
@@ -154,249 +165,29 @@ for(let i=0;i<35;i++){
     container.appendChild(p);
 }
 
-// Anime girl SVG — blue hair, dark outfit, thigh highs
-const animeGirlSVG = `
-<svg width="200" height="400" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-  <defs>
-    <radialGradient id="skinGrad" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#fde8d8"/>
-      <stop offset="100%" stop-color="#f5c9b0"/>
-    </radialGradient>
-    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4fc3f7"/>
-      <stop offset="60%" stop-color="#1976d2"/>
-      <stop offset="100%" stop-color="#0d47a1"/>
-    </linearGradient>
-    <linearGradient id="outfitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1a1a2e"/>
-      <stop offset="100%" stop-color="#0d0d1a"/>
-    </linearGradient>
-    <linearGradient id="jacketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1a237e"/>
-      <stop offset="100%" stop-color="#0d0d1a"/>
-    </linearGradient>
-  </defs>
+// Load Live2D model
+function loadLive2D() {
+    const canvas = document.getElementById("live2d-canvas");
+    canvas.width = 280;
+    canvas.height = 420;
+    try {
+        loadlive2d("live2d-canvas", "character/runtime/mao_pro.model3.json");
+    } catch(e) {
+        console.log("Live2D load error:", e);
+        // Fallback to static image
+        canvas.style.display = "none";
+        const img = document.createElement("div");
+        img.style.cssText = "width:280px;height:420px;display:flex;align-items:center;justify-content:center;font-size:8rem;animation:girlFloat 3s ease-in-out infinite;";
+        img.textContent = "🎓";
+        canvas.parentNode.insertBefore(img, canvas);
+    }
+}
 
-  <!-- ===== HAIR BACK ===== -->
-  <ellipse cx="100" cy="68" rx="46" ry="50" fill="url(#hairGrad)" opacity="0.9"/>
-  <!-- ponytail -->
-  <g class="ponytail-anim">
-    <path d="M55 75 Q30 110 38 160 Q42 180 35 200" stroke="url(#hairGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
-    <path d="M55 75 Q28 115 36 165 Q40 185 32 205" stroke="#4fc3f7" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.5"/>
-  </g>
-  <!-- hair ribbon -->
-  <ellipse cx="58" cy="78" rx="10" ry="6" fill="#1a237e" transform="rotate(-20,58,78)"/>
+window.addEventListener("load", () => {
+    setTimeout(loadLive2D, 500);
+});
 
-  <!-- ===== HEAD ===== -->
-  <ellipse cx="100" cy="72" rx="40" ry="44" fill="url(#skinGrad)"/>
-
-  <!-- ===== HAIR FRONT ===== -->
-  <!-- main top hair -->
-  <path d="M62 52 Q70 18 100 22 Q130 18 138 52 Q120 35 100 33 Q80 35 62 52Z" fill="url(#hairGrad)"/>
-  <!-- side bangs left -->
-  <path d="M62 52 Q48 68 50 90 Q55 72 66 68Z" fill="url(#hairGrad)"/>
-  <!-- side bangs right -->
-  <path d="M138 52 Q152 68 150 90 Q145 72 134 68Z" fill="url(#hairGrad)"/>
-  <!-- front middle bang -->
-  <path d="M88 28 Q82 50 80 62 Q90 50 100 48 Q110 50 120 62 Q118 50 112 28 Q106 22 100 22 Q94 22 88 28Z" fill="#1565c0"/>
-  <!-- hairband -->
-  <rect x="68" y="28" width="64" height="8" rx="4" fill="#263238"/>
-  <circle cx="100" cy="32" r="5" fill="#1a237e"/>
-
-  <!-- ===== EARS ===== -->
-  <ellipse cx="61" cy="80" rx="7" ry="9" fill="url(#skinGrad)"/>
-  <ellipse cx="139" cy="80" rx="7" ry="9" fill="url(#skinGrad)"/>
-
-  <!-- ===== EYES ===== -->
-  <!-- left eye -->
-  <g class="eye-left-anim">
-    <ellipse cx="84" cy="76" rx="13" ry="14" fill="#1a0a3c"/>
-    <ellipse cx="84" cy="76" rx="10" ry="11" fill="#3949ab"/>
-    <ellipse cx="84" cy="76" rx="7" ry="8" fill="#1565c0"/>
-    <ellipse cx="84" cy="76" rx="4" ry="5" fill="#0d0d1a"/>
-    <ellipse cx="80" cy="72" rx="3" ry="2.5" fill="white" opacity="0.9"/>
-    <ellipse cx="87" cy="78" rx="1.5" ry="1.5" fill="white" opacity="0.5"/>
-    <!-- eyelashes -->
-    <path d="M73 70 Q78 64 84 65 Q90 64 95 70" stroke="#0d0d1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  </g>
-  <!-- right eye -->
-  <g class="eye-right-anim">
-    <ellipse cx="116" cy="76" rx="13" ry="14" fill="#1a0a3c"/>
-    <ellipse cx="116" cy="76" rx="10" ry="11" fill="#3949ab"/>
-    <ellipse cx="116" cy="76" rx="7" ry="8" fill="#1565c0"/>
-    <ellipse cx="116" cy="76" rx="4" ry="5" fill="#0d0d1a"/>
-    <ellipse cx="112" cy="72" rx="3" ry="2.5" fill="white" opacity="0.9"/>
-    <ellipse cx="119" cy="78" rx="1.5" ry="1.5" fill="white" opacity="0.5"/>
-    <path d="M105 70 Q110 64 116 65 Q122 64 127 70" stroke="#0d0d1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  </g>
-  <!-- eyebrows -->
-  <path d="M72 63 Q80 58 92 62" stroke="#1565c0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  <path d="M108 62 Q120 58 128 63" stroke="#1565c0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-  <!-- blush -->
-  <ellipse cx="73" cy="88" rx="10" ry="6" fill="#ff8a80" opacity="0.3"/>
-  <ellipse cx="127" cy="88" rx="10" ry="6" fill="#ff8a80" opacity="0.3"/>
-
-  <!-- nose -->
-  <path d="M98 88 Q100 92 102 88" stroke="#e0a090" stroke-width="1.5" fill="none"/>
-
-  <!-- mouth -->
-  <path d="M92 96 Q100 102 108 96" stroke="#c97b7b" stroke-width="2" fill="none" stroke-linecap="round" class="mouth-anim"/>
-
-  <!-- choker -->
-  <rect x="78" y="112" width="44" height="7" rx="3.5" fill="#1a1a2e"/>
-  <rect x="96" y="113" width="8" height="5" rx="2" fill="#4fc3f7"/>
-
-  <!-- ===== NECK ===== -->
-  <rect x="90" y="108" width="20" height="20" rx="5" fill="url(#skinGrad)"/>
-
-  <!-- ===== DRESS/BODY ===== -->
-  <!-- white shirt under -->
-  <rect x="78" y="124" width="44" height="30" rx="4" fill="#e8e8e8"/>
-  <!-- green bow/tie -->
-  <path d="M96 130 L100 138 L104 130 L100 134Z" fill="#00897b"/>
-  <ellipse cx="100" cy="130" rx="8" ry="5" fill="#00897b"/>
-
-  <!-- main dark dress body -->
-  <path d="M72 148 Q70 180 68 210 L132 210 Q130 180 128 148Z" fill="url(#outfitGrad)"/>
-  <!-- dress trim -->
-  <path d="M68 210 Q80 220 100 218 Q120 220 132 210" stroke="#4fc3f7" stroke-width="1.5" fill="none" opacity="0.8"/>
-
-  <!-- belt -->
-  <rect x="72" y="175" width="56" height="8" rx="3" fill="#37474f"/>
-  <rect x="94" y="173" width="12" height="12" rx="2" fill="#ffd54f"/>
-  <rect x="96" y="175" width="8" height="8" rx="1" fill="#37474f"/>
-
-  <!-- skirt -->
-  <path d="M68 205 Q60 240 58 270 L142 270 Q140 240 132 205Z" fill="url(#outfitGrad)"/>
-  <path d="M58 268 Q80 280 100 278 Q120 280 142 268" stroke="#4fc3f7" stroke-width="2" fill="none"/>
-  <!-- skirt layered trim -->
-  <path d="M62 255 Q80 262 100 260 Q120 262 138 255" stroke="#1a237e" stroke-width="3" fill="none" opacity="0.7"/>
-
-  <!-- ===== JACKET/COAT ===== -->
-  <!-- left jacket panel -->
-  <g class="jacket-left-anim">
-    <path d="M72 148 Q50 155 35 165 Q25 185 28 220 Q40 225 55 215 Q62 195 68 175Z" fill="url(#jacketGrad)"/>
-    <path d="M35 165 Q25 185 28 220" stroke="#4fc3f7" stroke-width="1.5" fill="none" opacity="0.5"/>
-    <!-- green bow on sleeve -->
-    <path d="M38 195 Q42 188 46 195 Q42 191 38 195Z" fill="#00695c"/>
-    <ellipse cx="42" cy="195" rx="7" ry="4" fill="#00897b"/>
-    <path d="M38 195 Q42 202 46 195 Q42 198 38 195Z" fill="#00695c"/>
-  </g>
-  <!-- right jacket panel -->
-  <g class="jacket-right-anim">
-    <path d="M128 148 Q150 155 165 165 Q175 185 172 220 Q160 225 145 215 Q138 195 132 175Z" fill="url(#jacketGrad)"/>
-    <path d="M165 165 Q175 185 172 220" stroke="#4fc3f7" stroke-width="1.5" fill="none" opacity="0.5"/>
-    <!-- green bow on sleeve -->
-    <path d="M154 195 Q158 188 162 195 Q158 191 154 195Z" fill="#00695c"/>
-    <ellipse cx="158" cy="195" rx="7" ry="4" fill="#00897b"/>
-    <path d="M154 195 Q158 202 162 195 Q158 198 154 195Z" fill="#00695c"/>
-  </g>
-
-  <!-- ===== ARMS ===== -->
-  <!-- left arm -->
-  <g class="arm-left-anim">
-    <path d="M72 148 Q55 155 45 180 Q42 195 48 205" stroke="url(#skinGrad)" stroke-width="18" fill="none" stroke-linecap="round"/>
-    <!-- hand left -->
-    <ellipse cx="50" cy="208" rx="10" ry="9" fill="url(#skinGrad)"/>
-    <path d="M42 205 Q44 215 50 218" stroke="url(#skinGrad)" stroke-width="7" fill="none" stroke-linecap="round"/>
-    <path d="M52 215 Q56 220 58 216" stroke="url(#skinGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
-  </g>
-  <!-- right arm -->
-  <g class="arm-right-anim">
-    <path d="M128 148 Q145 155 155 180 Q158 195 152 205" stroke="url(#skinGrad)" stroke-width="18" fill="none" stroke-linecap="round"/>
-    <!-- hand right -->
-    <ellipse cx="150" cy="208" rx="10" ry="9" fill="url(#skinGrad)"/>
-    <path d="M158 205 Q156 215 150 218" stroke="url(#skinGrad)" stroke-width="7" fill="none" stroke-linecap="round"/>
-    <path d="M148 215 Q144 220 142 216" stroke="url(#skinGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
-  </g>
-
-  <!-- ===== LEGS ===== -->
-  <!-- left thigh (skin) -->
-  <g class="leg-left-anim">
-    <path d="M78 268 Q72 290 70 310" stroke="url(#skinGrad)" stroke-width="22" fill="none" stroke-linecap="round"/>
-    <!-- thigh high black stocking -->
-    <path d="M70 310 Q68 340 67 368" stroke="#212121" stroke-width="22" fill="none" stroke-linecap="round"/>
-    <!-- stocking top band -->
-    <path d="M63 309 Q70 315 77 309" stroke="#0d47a1" stroke-width="4" fill="none"/>
-    <!-- blue knee sock -->
-    <path d="M64 355 Q63 368 62 380" stroke="#1565c0" stroke-width="20" fill="none" stroke-linecap="round"/>
-    <!-- boot -->
-    <path d="M58 375 Q57 388 58 395 Q65 402 75 400 Q80 395 78 385 Q76 378 70 375Z" fill="#0d0d1a"/>
-    <path d="M58 395 Q65 404 75 402" stroke="#4fc3f7" stroke-width="1.5" fill="none"/>
-  </g>
-  <!-- right thigh (skin) -->
-  <g class="leg-right-anim">
-    <path d="M122 268 Q128 290 130 310" stroke="url(#skinGrad)" stroke-width="22" fill="none" stroke-linecap="round"/>
-    <!-- thigh high black stocking -->
-    <path d="M130 310 Q132 340 133 368" stroke="#212121" stroke-width="22" fill="none" stroke-linecap="round"/>
-    <!-- stocking top band -->
-    <path d="M123 309 Q130 315 137 309" stroke="#0d47a1" stroke-width="4" fill="none"/>
-    <!-- blue knee sock -->
-    <path d="M136 355 Q137 368 138 380" stroke="#1565c0" stroke-width="20" fill="none" stroke-linecap="round"/>
-    <!-- boot -->
-    <path d="M142 375 Q143 388 142 395 Q135 402 125 400 Q120 395 122 385 Q124 378 130 375Z" fill="#0d0d1a"/>
-    <path d="M142 395 Q135 404 125 402" stroke="#4fc3f7" stroke-width="1.5" fill="none"/>
-  </g>
-
-  <!-- floating particles around character -->
-  <circle cx="30" cy="100" r="3" fill="#4fc3f7" opacity="0.6" class="float-particle-1"/>
-  <circle cx="170" cy="80" r="2" fill="#64b4ff" opacity="0.5" class="float-particle-2"/>
-  <circle cx="20" cy="200" r="2.5" fill="#4fc3f7" opacity="0.4" class="float-particle-3"/>
-  <text x="155" y="120" font-size="14" class="music-float-1">🎵</text>
-  <text x="15" y="150" font-size="12" class="music-float-2">✨</text>
-  <text x="160" y="200" font-size="11" class="music-float-3">💫</text>
-</svg>`;
-
-document.getElementById("animeGirl").innerHTML = animeGirlSVG;
-</script>
-<style>
-/* Character animations */
-#animeGirl { animation: girlFloat 3s ease-in-out infinite; display:block; }
-@keyframes girlFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
-
-.arm-left-anim  { animation: armLeft  1.2s ease-in-out infinite alternate; transform-origin: 72px 148px; }
-.arm-right-anim { animation: armRight 1.2s ease-in-out infinite alternate; transform-origin: 128px 148px; }
-@keyframes armLeft  { from{transform:rotate(-15deg);} to{transform:rotate(20deg);} }
-@keyframes armRight { from{transform:rotate(15deg);}  to{transform:rotate(-20deg);} }
-
-.jacket-left-anim  { animation: jacketL 1.2s ease-in-out infinite alternate; transform-origin: 72px 155px; }
-.jacket-right-anim { animation: jacketR 1.2s ease-in-out infinite alternate; transform-origin: 128px 155px; }
-@keyframes jacketL { from{transform:rotate(-8deg);} to{transform:rotate(5deg);} }
-@keyframes jacketR { from{transform:rotate(8deg);}  to{transform:rotate(-5deg);} }
-
-.leg-left-anim  { animation: legL 1.2s ease-in-out infinite alternate; transform-origin: 78px 268px; }
-.leg-right-anim { animation: legR 1.2s ease-in-out infinite alternate; transform-origin:122px 268px; }
-@keyframes legL { from{transform:rotate(-8deg);} to{transform:rotate(6deg);} }
-@keyframes legR { from{transform:rotate(8deg);}  to{transform:rotate(-6deg);} }
-
-.ponytail-anim { animation: ponytail 1.5s ease-in-out infinite alternate; transform-origin: 55px 75px; }
-@keyframes ponytail { from{transform:rotate(-10deg);} to{transform:rotate(15deg);} }
-
-.eye-left-anim,.eye-right-anim { animation: blink 4s ease-in-out infinite; }
-@keyframes blink { 0%,44%,56%,100%{transform:scaleY(1);} 50%{transform:scaleY(0.08);} }
-.eye-left-anim  { transform-origin: 84px 76px; }
-.eye-right-anim { transform-origin:116px 76px; }
-
-.mouth-anim { animation: mouthTalk 0.9s ease-in-out infinite; transform-origin:100px 98px; }
-@keyframes mouthTalk { 0%,100%{d:path("M92 96 Q100 102 108 96");} 50%{d:path("M93 96 Q100 104 107 96");} }
-
-.float-particle-1 { animation: fp1 3s ease-in-out infinite; }
-.float-particle-2 { animation: fp2 2.5s ease-in-out infinite; }
-.float-particle-3 { animation: fp3 3.5s ease-in-out infinite; }
-@keyframes fp1 { 0%,100%{transform:translate(0,0);opacity:0.6;} 50%{transform:translate(5px,-15px);opacity:0.2;} }
-@keyframes fp2 { 0%,100%{transform:translate(0,0);opacity:0.5;} 50%{transform:translate(-8px,-20px);opacity:0.1;} }
-@keyframes fp3 { 0%,100%{transform:translate(0,0);opacity:0.4;} 50%{transform:translate(6px,-18px);opacity:0.1;} }
-
-.music-float-1 { animation: mf1 2s ease-in-out infinite; }
-.music-float-2 { animation: mf2 2.7s ease-in-out infinite; }
-.music-float-3 { animation: mf3 3.2s ease-in-out infinite; }
-@keyframes mf1 { 0%{transform:translateY(0);opacity:0;} 30%{opacity:1;} 100%{transform:translateY(-40px);opacity:0;} }
-@keyframes mf2 { 0%{transform:translateY(0);opacity:0;} 30%{opacity:1;} 100%{transform:translateY(-35px);opacity:0;} }
-@keyframes mf3 { 0%{transform:translateY(0);opacity:0;} 30%{opacity:1;} 100%{transform:translateY(-30px);opacity:0;} }
-</style>
-
-<script>
+// Speech messages
 const messages = {
     "idle": [
         "Arre! Pehle login karo 😊",
@@ -406,7 +197,6 @@ const messages = {
         "Login karo, phir seekhte hain! 💙",
         "StudyMate ready hai tere liye! ✨",
         "Jaldi karo, bahut kuch seekhna hai! 🚀",
-        "Blue hair, big dreams! 💙✨",
     ],
     "focus-email": "Email daal do, main wait kar rahi hoon 😄",
     "focus-pass": "Password secret rahega, I promise! 🤫",
@@ -430,10 +220,10 @@ function startIdleTimer(){
     clearTimeout(idleTimer);
     idleTimer=setTimeout(()=>{
         const bubble=document.getElementById("speechBubble");
-        const msg=messages["idle"][idleIndex%messages["idle"].length];
         bubble.style.animation="none"; bubble.offsetHeight;
         bubble.style.animation="bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1)";
-        bubble.textContent=msg; idleIndex++;
+        bubble.textContent=messages["idle"][idleIndex%messages["idle"].length];
+        idleIndex++;
         startIdleTimer();
     },3000);
 }
@@ -445,7 +235,6 @@ function switchTab(tab){
     if(tab==="login"){
         document.querySelectorAll(".tab")[0].classList.add("active");
         document.getElementById("loginForm").classList.add("active");
-        sayMessage("idle");
     }else{
         document.querySelectorAll(".tab")[1].classList.add("active");
         document.getElementById("signupForm").classList.add("active");
