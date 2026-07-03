@@ -4,26 +4,112 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>StudyMate AI — Login</title>
-    <!-- Live2D Cubism SDK -->
     <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
         body {
-            background: linear-gradient(135deg, #0a0a1a 0%, #0f0f2e 50%, #0a0a1a 100%);
+            background: linear-gradient(180deg, #1a0e2e 0%, #0d1b2a 40%, #0a1628 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
         }
-        .orb { position:fixed; border-radius:50%; filter:blur(80px); animation:orbFloat 8s ease-in-out infinite; z-index:0; }
+
+        /* Library bookshelf background */
+        .library-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Wooden shelf rows */
+        .shelf {
+            position: absolute;
+            left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(180deg, #8B5E3C, #5C3A1E);
+            border-radius: 2px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .shelf::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: -3px;
+            height: 3px;
+            background: #A0704A;
+            border-radius: 2px;
+        }
+        .shelf-1 { top: 22%; }
+        .shelf-2 { top: 48%; }
+        .shelf-3 { top: 74%; }
+
+        /* Books on shelves */
+        .book {
+            position: absolute;
+            bottom: 0;
+            border-radius: 2px 4px 4px 2px;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.4);
+        }
+
+        /* Paper texture overlay */
+        .paper-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 28px,
+                    rgba(100,180,255,0.04) 28px,
+                    rgba(100,180,255,0.04) 29px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Floating study items */
+        .float-item {
+            position: fixed;
+            font-size: 1.4rem;
+            animation: floatItem linear infinite;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+        }
+        @keyframes floatItem {
+            0%   { transform: translateY(100vh) rotate(0deg);   opacity: 0; }
+            10%  { opacity: 0.6; }
+            90%  { opacity: 0.2; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Candle glow spots */
+        .candle-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 1;
+            animation: candleFlicker 3s ease-in-out infinite;
+        }
+        @keyframes candleFlicker {
+            0%,100% { opacity: 0.3; transform: scale(1); }
+            50%     { opacity: 0.5; transform: scale(1.1); }
+        }
+        .orb { position:fixed; border-radius:50%; filter:blur(80px); animation:orbFloat 8s ease-in-out infinite; z-index:0; pointer-events:none; }
         .orb-1 { width:350px; height:350px; background:rgba(30,80,180,0.2); top:-80px; left:-80px; }
         .orb-2 { width:250px; height:250px; background:rgba(100,180,255,0.12); bottom:-60px; right:-60px; animation-delay:-4s; }
         @keyframes orbFloat { 0%,100%{transform:translate(0,0);} 50%{transform:translate(20px,-20px);} }
         .particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
         .particle { position:absolute; background:#64b4ff; border-radius:50%; animation:floatUp linear infinite; opacity:0; }
         @keyframes floatUp {
-            0%{transform:translateY(100vh) scale(0);opacity:0;}
+            0%{transform:translateY(100vh);opacity:0;}
             10%{opacity:0.5;} 90%{opacity:0.2;}
             100%{transform:translateY(-10vh);opacity:0;}
         }
@@ -33,29 +119,33 @@
         }
         .girl-wrapper {
             display:flex; flex-direction:column; align-items:center; gap:10px;
+            position: relative;
         }
         .speech-bubble {
-            background:rgba(30,80,180,0.25);
+            background:rgba(30,80,180,0.3);
             border:1px solid rgba(100,180,255,0.5);
             border-radius:16px 16px 16px 4px;
             padding:10px 16px; font-size:0.85rem;
             color:#64b4ff; max-width:230px; text-align:center;
+            min-height:42px; z-index:20; position:relative;
             animation:bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-            min-height: 42px; z-index: 20; position:relative;
         }
         @keyframes bubblePop { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
-        #live2d-canvas {
+        #live2d-container {
             width: 280px;
             height: 420px;
-            border-radius: 16px;
+            position: relative;
         }
-        /* LOGIN CARD */
+        #live2d-container canvas {
+            position: absolute;
+            top: 0; left: 0;
+        }
         .login-card {
             background:rgba(10,10,30,0.92); backdrop-filter:blur(20px);
             border:1px solid rgba(100,180,255,0.2); border-radius:24px;
             padding:38px 34px; width:370px; max-width:95vw;
             box-shadow:0 25px 60px rgba(0,0,0,0.6);
-            animation:cardAppear 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            animation:cardAppear 0.8s cubic-bezier(0.34,1.56,0.64,1);
         }
         @keyframes cardAppear { from{opacity:0;transform:translateY(40px) scale(0.9);} to{opacity:1;transform:translateY(0) scale(1);} }
         .logo-area{text-align:center;margin-bottom:22px;}
@@ -86,7 +176,7 @@
         @keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
         .success-text{color:#64b4ff;font-size:1.3rem;font-weight:600;}
         .success-sub{color:#555;font-size:0.82rem;}
-        @media(max-width:750px){.main-layout{flex-direction:column;gap:16px;} #live2d-canvas{width:200px;height:300px;}}
+        @media(max-width:750px){.main-layout{flex-direction:column;gap:16px;} #live2d-container{width:200px;height:300px;}}
     </style>
 </head>
 <body>
@@ -94,14 +184,28 @@
 <div class="orb orb-2"></div>
 <div class="particles" id="particles"></div>
 
+<!-- Library Background -->
+<div class="library-bg" id="libraryBg">
+    <!-- Shelves -->
+    <div class="shelf shelf-1"></div>
+    <div class="shelf shelf-2"></div>
+    <div class="shelf shelf-3"></div>
+    <!-- Books generated by JS -->
+</div>
+
+<!-- Paper line overlay -->
+<div class="paper-overlay"></div>
+
+<!-- Candle glows -->
+<div class="candle-glow" style="width:200px;height:200px;background:rgba(255,180,50,0.12);top:10%;left:5%;"></div>
+<div class="candle-glow" style="width:150px;height:150px;background:rgba(255,150,30,0.1);top:60%;right:8%;animation-delay:-1.5s;"></div>
+
 <div class="main-layout">
-    <!-- Character side -->
     <div class="girl-wrapper">
         <div class="speech-bubble" id="speechBubble">Arre! Pehle login karo 😊</div>
-        <canvas id="live2d-canvas"></canvas>
+        <div id="live2d-container"></div>
     </div>
 
-    <!-- Login Card -->
     <div class="login-card">
         <div class="logo-area">
             <span class="logo-icon">🎓</span>
@@ -151,7 +255,6 @@
     <div class="success-sub">Padhai shuru karte hain... 📚</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
 <script>
 // Particles
 const container = document.getElementById("particles");
@@ -165,69 +268,137 @@ for(let i=0;i<35;i++){
     container.appendChild(p);
 }
 
-// Load Live2D model
-function loadLive2D() {
-    const canvas = document.getElementById("live2d-canvas");
-    canvas.width = 280;
-    canvas.height = 420;
-    try {
-        loadlive2d("live2d-canvas", "character/runtime/mao_pro.model3.json");
-    } catch(e) {
-        console.log("Live2D load error:", e);
-        // Fallback to static image
-        canvas.style.display = "none";
-        const img = document.createElement("div");
-        img.style.cssText = "width:280px;height:420px;display:flex;align-items:center;justify-content:center;font-size:8rem;animation:girlFloat 3s ease-in-out infinite;";
-        img.textContent = "🎓";
-        canvas.parentNode.insertBefore(img, canvas);
-    }
-}
+// Library books on shelves
+const bookColors = [
+    "#8B0000","#1a237e","#1b5e20","#4a148c","#e65100",
+    "#880e4f","#006064","#33691e","#bf360c","#1565c0",
+    "#4e342e","#37474f","#6a1b9a","#2e7d32","#c62828"
+];
+const shelves = [22, 48, 74]; // % positions
+const libraryBg = document.getElementById("libraryBg");
 
-window.addEventListener("load", () => {
-    setTimeout(loadLive2D, 500);
+shelves.forEach(shelfTop => {
+    const count = Math.floor(Math.random() * 8) + 18;
+    let leftPos = Math.random() * 3;
+    for(let i = 0; i < count; i++) {
+        const book = document.createElement("div");
+        book.classList.add("book");
+        const w = Math.random() * 18 + 10;
+        const h = Math.random() * 40 + 50;
+        const color = bookColors[Math.floor(Math.random() * bookColors.length)];
+        const tilt = (Math.random() - 0.5) * 8;
+        book.style.cssText = `
+            width:${w}px; height:${h}px;
+            background: linear-gradient(135deg, ${color}, ${color}99);
+            left:${leftPos}%;
+            top:calc(${shelfTop}% - ${h}px);
+            transform: rotate(${tilt}deg);
+            border-left: 3px solid rgba(255,255,255,0.15);
+            border-top: 2px solid rgba(255,255,255,0.1);
+        `;
+        // Add spine detail
+        if(Math.random() > 0.5) {
+            book.style.background = `linear-gradient(90deg, ${color}cc 0%, ${color} 40%, ${color}cc 100%)`;
+        }
+        libraryBg.appendChild(book);
+        leftPos += (w / window.innerWidth * 100) + Math.random() * 0.3;
+        if(leftPos > 98) break;
+    }
 });
 
-// Speech messages
-const messages = {
-    "idle": [
-        "Arre! Pehle login karo 😊",
-        "Padhai time hai! 📚",
-        "Main yahaan hoon, chinta mat karo 💕",
-        "Aaj kya padhna hai? 🤔",
-        "Login karo, phir seekhte hain! 💙",
-        "StudyMate ready hai tere liye! ✨",
-        "Jaldi karo, bahut kuch seekhna hai! 🚀",
-    ],
-    "focus-email": "Email daal do, main wait kar rahi hoon 😄",
-    "focus-pass": "Password secret rahega, I promise! 🤫",
-    "focus-name": "Naam batao apna! Main yaad rakhungi 💕",
-    "hover-login": "Haan haan! Login karo jaldi! 🎉",
-    "hover-signup": "New account? Swagat hai! 🥳",
-    "hover-guest": "Guest bhi chalega, koi nahi! 😊",
-};
-let idleIndex=0, idleTimer;
+// Floating study items
+const studyEmojis = ["📚","📖","✏️","📝","🔬","📐","📏","🖊️","📓","🎓","💡","🔭","📊","📌"];
+studyEmojis.forEach((emoji, i) => {
+    const el = document.createElement("div");
+    el.classList.add("float-item");
+    el.textContent = emoji;
+    el.style.left = (Math.random() * 90 + 5) + "vw";
+    el.style.animationDuration = (Math.random() * 15 + 12) + "s";
+    el.style.animationDelay = (Math.random() * 12) + "s";
+    el.style.fontSize = (Math.random() * 1 + 0.9) + "rem";
+    document.body.appendChild(el);
+});
 
-function sayMessage(key){
+// Live2D
+window.addEventListener("load", async () => {
+    try {
+        const W = 280, H = 420;
+        const app = new PIXI.Application({
+            width: W, height: H,
+            backgroundAlpha: 0,
+            antialias: true,
+        });
+        document.getElementById("live2d-container").appendChild(app.view);
+
+        const model = await PIXI.live2d.Live2DModel.from("character/runtime/mao_pro.model3.json");
+        app.stage.addChild(model);
+
+        const scale = 0.055;
+        model.scale.set(scale);
+        model.anchor.set(0.5, 1);
+        model.x = W / 2;
+        model.y = H - 5;
+
+        // Motions
+        const motions = ["mtn_01","mtn_02","mtn_03","mtn_04"];
+        let mIdx = 0;
+        function nextMotion(){ model.motion(motions[mIdx++ % motions.length]); }
+        nextMotion();
+        setInterval(nextMotion, 4000);
+
+        // Walk left-right
+        let walkX = W/2, walkDir = 1;
+        let floatY = 0, floatDir = 1;
+        app.ticker.add(() => {
+            walkX += 0.5 * walkDir;
+            if(walkX > W-40) walkDir = -1;
+            if(walkX < 40)   walkDir =  1;
+            model.x = walkX;
+            model.scale.x = walkDir > 0 ? scale : -scale;
+
+            floatY += 0.25 * floatDir;
+            if(floatY >  8) floatDir = -1;
+            if(floatY < -8) floatDir =  1;
+            model.y = H - 5 + floatY;
+        });
+
+    } catch(e) {
+        console.error("Live2D error:", e);
+        document.getElementById("live2d-container").innerHTML =
+            '<div style="width:280px;height:420px;display:flex;align-items:center;justify-content:center;font-size:7rem;">🎓</div>';
+    }
+});
+
+// Speech
+const messages = {
+    idle:["Arre! Pehle login karo 😊","Padhai time hai! 📚","Main yahaan hoon 💕","Aaj kya padhna hai? 🤔","Login karo, phir seekhte hain! 💙","StudyMate ready hai! ✨","Jaldi karo! 🚀"],
+    "focus-email":"Email daal do 😄",
+    "focus-pass":"Password secret rahega! 🤫",
+    "focus-name":"Naam batao apna! 💕",
+    "hover-login":"Haan! Login karo jaldi! 🎉",
+    "hover-signup":"New account? Swagat! 🥳",
+    "hover-guest":"Guest bhi chalega! 😊",
+};
+let idleIdx=0, idleTimer;
+function sayMessage(k){
     clearTimeout(idleTimer);
-    const bubble=document.getElementById("speechBubble");
-    const msg=typeof messages[key]==="string"?messages[key]:messages["idle"][0];
-    bubble.style.animation="none"; bubble.offsetHeight;
-    bubble.style.animation="bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1)";
-    bubble.textContent=msg;
-    startIdleTimer();
+    const b=document.getElementById("speechBubble");
+    b.style.animation="none"; b.offsetHeight;
+    b.style.animation="bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1)";
+    b.textContent=typeof messages[k]==="string"?messages[k]:messages.idle[0];
+    startIdle();
 }
-function startIdleTimer(){
+function startIdle(){
     clearTimeout(idleTimer);
     idleTimer=setTimeout(()=>{
-        const bubble=document.getElementById("speechBubble");
-        bubble.style.animation="none"; bubble.offsetHeight;
-        bubble.style.animation="bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1)";
-        bubble.textContent=messages["idle"][idleIndex%messages["idle"].length];
-        idleIndex++;
-        startIdleTimer();
+        const b=document.getElementById("speechBubble");
+        b.style.animation="none"; b.offsetHeight;
+        b.style.animation="bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1)";
+        b.textContent=messages.idle[idleIdx++%messages.idle.length];
+        startIdle();
     },3000);
 }
-startIdleTimer();
+startIdle();
 
 function switchTab(tab){
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -235,40 +406,40 @@ function switchTab(tab){
     if(tab==="login"){
         document.querySelectorAll(".tab")[0].classList.add("active");
         document.getElementById("loginForm").classList.add("active");
-    }else{
+    } else {
         document.querySelectorAll(".tab")[1].classList.add("active");
         document.getElementById("signupForm").classList.add("active");
         sayMessage("focus-name");
     }
 }
-function showSuccessAndRedirect(name){
+function showSuccess(name){
     document.getElementById("successText").textContent=`Welcome, ${name}! 🎓`;
     document.getElementById("successOverlay").classList.add("show");
-    setTimeout(()=>{window.location.href="index.html";},1800);
+    setTimeout(()=>{ window.location.href="index.html"; },1800);
 }
 function handleLogin(){
-    const email=document.getElementById("loginEmail").value.trim();
-    const pass=document.getElementById("loginPass").value.trim();
-    if(!email||!pass){alert("Email aur password dono bharo 🙏");return;}
-    localStorage.setItem("studymate_user",email.split("@")[0]);
-    showSuccessAndRedirect(email.split("@")[0]);
+    const e=document.getElementById("loginEmail").value.trim();
+    const p=document.getElementById("loginPass").value.trim();
+    if(!e||!p){alert("Email aur password dono bharo 🙏");return;}
+    localStorage.setItem("studymate_user",e.split("@")[0]);
+    showSuccess(e.split("@")[0]);
 }
 function handleSignup(){
-    const name=document.getElementById("signupName").value.trim();
-    const email=document.getElementById("signupEmail").value.trim();
-    const pass=document.getElementById("signupPass").value.trim();
-    if(!name||!email||!pass){alert("Saari fields bharo 🙏");return;}
-    localStorage.setItem("studymate_user",name);
-    showSuccessAndRedirect(name);
+    const n=document.getElementById("signupName").value.trim();
+    const e=document.getElementById("signupEmail").value.trim();
+    const p=document.getElementById("signupPass").value.trim();
+    if(!n||!e||!p){alert("Saari fields bharo 🙏");return;}
+    localStorage.setItem("studymate_user",n);
+    showSuccess(n);
 }
 function handleGuest(){
     localStorage.setItem("studymate_user","Guest");
-    showSuccessAndRedirect("Guest");
+    showSuccess("Guest");
 }
-document.addEventListener("keydown",(e)=>{
+document.addEventListener("keydown",e=>{
     if(e.key==="Enter"){
-        const af=document.querySelector(".form.active").id;
-        if(af==="loginForm")handleLogin(); else handleSignup();
+        const f=document.querySelector(".form.active").id;
+        if(f==="loginForm")handleLogin(); else handleSignup();
     }
 });
 </script>

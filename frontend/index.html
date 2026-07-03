@@ -25,8 +25,16 @@
                 <div class="feature-item" onclick="setPrompt('Explain this code and fix bugs: ')">💻 Code Helper</div>
                 <div class="feature-item" onclick="setPrompt('Ask me interview questions for: ')">🎯 Interview Prep</div>
             </div>
-            <button class="clear-btn" onclick="clearChat()">🗑️ Clear Chat</button>
-        </div>
+
+            <!-- Chat History Section -->
+            <div class="history-section">
+                <p class="feature-title" style="margin-bottom:8px;">🕐 Chat History</p>
+                <div id="historySidebar" class="history-sidebar">
+                    <p class="no-history">Koi history nahi hai abhi 📭</p>
+                </div>
+            </div>
+
+            <button class="clear-btn" onclick="clearChat()">🗑️ Clear Chat</button>        </div>
 
         <!-- Main Chat Area -->
         <div class="chat-container">
