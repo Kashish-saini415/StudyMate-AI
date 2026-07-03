@@ -329,7 +329,28 @@ function appendMessageWithFile(text, sender, fileInfo) {
     chatMessages.appendChild(msgDiv); scrollToBottom();
 }
 function formatText(text) {
-    return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\*(.*?)\*/g, "<em>$1</em>").replace(/\n/g, "<br>");
+    return text
+        // H2 headings — ## Heading
+        .replace(/^## (.+)$/gm, '<h2 style="font-size:1.1rem;font-weight:700;margin:16px 0 6px;color:#1f1f1f;">$1</h2>')
+        // H3 headings — ### Heading
+        .replace(/^### (.+)$/gm, '<h3 style="font-size:1rem;font-weight:600;margin:12px 0 4px;color:#1f1f1f;">$1</h3>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Bullet points — lines starting with - or *
+        .replace(/^[\-\*] (.+)$/gm, '<li style="margin:3px 0 3px 18px;list-style:disc;">$1</li>')
+        // Numbered list
+        .replace(/^\d+\. (.+)$/gm, '<li style="margin:3px 0 3px 18px;list-style:decimal;">$1</li>')
+        // Wrap consecutive <li> in <ul>
+        .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul style="margin:6px 0;padding-left:4px;">$&</ul>')
+        // Code blocks
+        .replace(/`([^`]+)`/g, '<code style="background:#f1f3f4;padding:2px 6px;border-radius:4px;font-size:0.88rem;font-family:monospace;">$1</code>')
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid #e0e0e0;margin:12px 0;">')
+        // Line breaks
+        .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
+        .replace(/\n/g, '<br>');
 }
 function showTyping() {
     document.getElementById("welcomeScreen").style.display = "none";
