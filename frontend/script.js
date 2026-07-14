@@ -330,21 +330,45 @@ function appendMessage(text, sender) {
     scrollToBottom();
 }
 function appendMessageWithFile(text, sender, fileInfo) {
-    const chatMessages = document.getElementById("chatMessages");
+    document.getElementById("welcomeScreen").style.display = "none";
+    document.getElementById("messagesList").style.display = "flex";
+
+    const list = document.getElementById("messagesList");
+    const u = localStorage.getItem("studymate_user") || "You";
+
     const msgDiv = document.createElement("div");
-    msgDiv.classList.add("message", "user-message");
+    msgDiv.classList.add("msg-row", sender === "user" ? "user" : "bot");
+
     const avatar = document.createElement("div");
-    avatar.classList.add("avatar");
-    avatar.textContent = "👩‍🎓";
+    avatar.classList.add("msg-avatar", sender === "user" ? "user-av" : "bot-av");
+    avatar.textContent = sender === "user" ? u.charAt(0).toUpperCase() : "S";
+
+    const content = document.createElement("div");
+    content.classList.add("msg-content");
+
+    const name = document.createElement("div");
+    name.classList.add("msg-name");
+    name.textContent = sender === "user" ? u : "StudyMate";
+
     const bubble = document.createElement("div");
-    bubble.classList.add("bubble");
+    bubble.classList.add("msg-bubble");
+
     if (fileInfo.type === "image") {
         const reader = new FileReader();
-        reader.onload = e => { bubble.innerHTML = `<img src="${e.target.result}" />${text ? `<br>${formatText(text)}` : ""}`; };
+        reader.onload = e => {
+            bubble.innerHTML = `<img src="${e.target.result}" style="max-width:220px;border-radius:10px;display:block;" />${text ? `<div style="margin-top:6px;">${formatText(text)}</div>` : ""}`;
+        };
         reader.readAsDataURL(fileInfo.file);
-    } else { bubble.innerHTML = `📄 ${fileInfo.name}<br>${formatText(text)}`; }
-    msgDiv.appendChild(avatar); msgDiv.appendChild(bubble);
-    chatMessages.appendChild(msgDiv); scrollToBottom();
+    } else {
+        bubble.innerHTML = `📄 ${fileInfo.name}${text ? `<br>${formatText(text)}` : ""}`;
+    }
+
+    content.appendChild(name);
+    content.appendChild(bubble);
+    msgDiv.appendChild(avatar);
+    msgDiv.appendChild(content);
+    list.appendChild(msgDiv);
+    scrollToBottom();
 }
 function formatText(text) {
     // Split into lines and process
