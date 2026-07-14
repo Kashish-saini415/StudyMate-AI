@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "https://studymate-ai-tky6.onrender.com";
 let currentFile = null;
 let cameraStream = null;
 let autoSpeakEnabled = false;
